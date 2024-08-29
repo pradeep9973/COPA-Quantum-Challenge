@@ -103,6 +103,14 @@ def main():
     affected_passengers = get_affected_passengers(pnr, cancelled_flights)
     flights_network = initialize_flight_network(available_flights)
     alternative_flights = get_alternative_flights(affected_passengers, flights_network)
-   
+    flattened_data = [
+            {'RECLOC': key[0], 'Original DEP_KEY': key[1], 'Path': path }
+            for key, paths in alternative_flights.items()
+            for path in paths
+    ]
+    df = pd.DataFrame(flattened_data)
+    df.to_csv('alternative_flights.csv', index = False)
+
+
 if __name__ == '__main__':
     main()

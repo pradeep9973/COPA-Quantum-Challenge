@@ -58,8 +58,11 @@ class FlightNetwork:
                         next_paths.append(new_path)
 
             current_paths = next_paths
-    
-        valid_paths_keys = [[edge['dep_key'] for edge in path] for path in current_paths]
+
+
+        valid_paths_keys = set(tuple(edge['dep_key'] for edge in path) for path in current_paths)
+        valid_paths_keys = [list(path) for path in valid_paths_keys]
+
         return True, valid_paths_keys
 
     def find_all_paths(self, source, destination, max_legs = 3):
