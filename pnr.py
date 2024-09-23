@@ -65,13 +65,14 @@ def get_alternative_flights(affected_passengers: pd.DataFrame, flights_network: 
     for _, passenger in affected_passengers.iterrows():
         recloc = passenger['RECLOC']
         source = passenger['OPER_OD_ORIG_CD']
+        original_dep_time = ['DEP_DTMZ'] #this might not work for connections i probably need to find the original dep time for the overall trip here
         destination = passenger['OPER_OD_DEST_CD']
         passenger_class = passenger['CABIN_CD']
         required_c_seats = abs(passenger['PAX_CNT']) if passenger_class == 'C' else 0
         required_y_seats = abs(passenger['PAX_CNT']) if passenger_class == 'Y' else 0
         original_dep_key = passenger['DEP_KEY']
         
-        possible_routes = flights_network.find_all_valid_paths(source, destination, required_c_seats, required_y_seats, passenger_class)
+        possible_routes = flights_network.find_all_valid_paths(source, destination, required_c_seats, required_y_seats, passenger_class, original_dep_time)
         key = (recloc, original_dep_key)
         alternative_flights_dict[key] = possible_routes
 

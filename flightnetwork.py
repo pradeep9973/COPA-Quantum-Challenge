@@ -1,6 +1,7 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 from collections import deque
+from datetime import timedelta
 
 class FlightNetwork:
     def __init__(self):
@@ -8,7 +9,7 @@ class FlightNetwork:
     def add_flight(self, departure, arrival, dep_time, arr_time, c_avail, y_avail, dep_key):
         self.graph.add_edge(departure, arrival, dep_time = dep_time, arr_time = arr_time, c_avail = c_avail, y_avail = y_avail, dep_key = dep_key)
 
-    def is_valid_path(self, path, c_seats, y_seats, passenger_class):
+    def is_valid_path(self, path, c_seats, y_seats, passenger_class, original_dep_time):
         valid_edges_per_leg = []
         for i in range(len(path) - 1):
             edge_data = self.graph[path[i]][path[i+1]]
@@ -20,6 +21,9 @@ class FlightNetwork:
                 c_avail = int(data.get('c_avail', 0))
                 y_avail = int(data.get('y_avail', 0))
                 dep_key = data.get('dep_key')
+
+                if i == 0 and (dep_time - original_dep_time) > timedelta(hours = 72):
+                    continue
 
                 if passenger_class == 'C':
                     if c_seats > c_avail + y_avail:
@@ -53,7 +57,7 @@ class FlightNetwork:
             for path in current_paths:
                 last_edge = path[-1]
                 for edge in valid_edges_per_leg[i]:
-                    if last_edge['arr_time'] <= edge['dep_time']:
+                    if last_edge['arr_time'] <= edge['dep_time'] and (edge['dep_time'] - last_edge['arr_time']) <= timedelta(hours = 23):
                         new_path = path + [edge]
                         next_paths.append(new_path)
 
@@ -65,18 +69,18 @@ class FlightNetwork:
 
         return True, valid_paths_keys
 
-    def find_all_paths(self, source, destination, max_legs = 3):
+    def find_all_paths(self, source, destination, max_legs = 2):
         raw_paths = nx.all_simple_paths(self.graph, source, destination, cutoff= max_legs)
         unique_paths = set(tuple(path) for path in raw_paths)
         return [list(path) for path in unique_paths]
     
 
-    def find_all_valid_paths(self, source, destination, c_seats, y_seats, passenger_class, max_legs = 2):
+    def find_all_valid_paths(self, source, destination, c_seats, y_seats, passenger_class, original_dep_time, max_legs = 2):
         all_paths = self.find_all_paths(source, destination, max_legs)
         valid_paths = []
 
         for path in all_paths:
-            is_valid, valid_paths_keys = self.is_valid_path(path, c_seats, y_seats, passenger_class)
+            is_valid, valid_paths_keys = self.is_valid_path(path, c_seats, y_seats, passenger_class, original_dep_time)
             if is_valid:
                 valid_paths.append(valid_paths_keys)
 
